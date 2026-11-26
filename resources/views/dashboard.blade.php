@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-US" dir="ltr" data-navigation-type="default" data-navbar-horizontal-shape="default">
+<html lang="en-US" dir="ltr" data-navigation-type="default" data-navbar-horizontal-shape="default" class="{{ in_array(($module ?? null), ['categories', 'news-entry', 'news-management'], true) ? 'portal-module-page' : '' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -101,17 +101,15 @@
     $isTrialSubscription = (bool) data_get($subscriptionInfo ?? [], 'subscription.package.is_trial', true);
     $subscriptionAction = $isTrialSubscription ? 'Purchase' : 'Renew';
 @endphp
-@if (in_array(($module ?? null), ['categories', 'news-entry', 'news-management'], true))
 <style>
-    /* Module page: same Phoenix shell, only the content area differs. */
-    #app .content > *:not(.footer):not(.cat-module):not(.news-module):not(#portal-inertia):not(#subscription-banner) { display: none !important; }
+    /* Keep the Phoenix shell, but hide its demo dashboard while an Inertia module is active. */
+    html.portal-module-page #app .content > *:not(.footer):not(.cat-module):not(.news-module):not(#portal-inertia):not(#subscription-banner) { display: none !important; }
     /* Keep Phoenix's own footer behaviour (absolute at the bottom of .content, so it follows the sidebar offset
        on desktop and spans the full width on phones). A fixed footer with a hard-coded left offset covered the
        page content and broke the layout on small screens. */
-    #app .content { min-width: 0; }
-    #app .content > .cat-module, #app .content > .news-module, #app .content > #portal-inertia { min-width: 0; max-width: 100%; }
+    html.portal-module-page #app .content { min-width: 0; }
+    html.portal-module-page #app .content > .cat-module, html.portal-module-page #app .content > .news-module, html.portal-module-page #app .content > #portal-inertia { min-width: 0; max-width: 100%; }
 </style>
-@endif
 <style>
     .sub-toast { position: fixed; top: 5rem; left: 50%; transform: translateX(-50%); z-index: 2100; width: min(28rem, 92vw); padding: .5rem 2.5rem .5rem .75rem; font-size: .85rem; }
     .portal-support-notice { position: fixed; top: 5rem; right: 1rem; z-index: 2200; width: min(36rem, calc(100vw - 2rem)); }
