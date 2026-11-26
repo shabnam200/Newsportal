@@ -1,0 +1,58 @@
+<script setup>
+import { Link, usePage } from '@inertiajs/vue3'
+import AdminLayout from '../../AdminLayout.vue'
+
+defineOptions({ layout: AdminLayout })
+
+const props = defineProps({
+  q: { type: String, default: '' }, renewalStatus: { type: String, default: '' }, graceStatus: { type: String, default: '' },
+  pendingPurchases: { type: Object, required: true }, pendingGraces: { type: Object, required: true },
+  historyPurchases: { type: Array, required: true }, historyGraces: { type: Array, required: true },
+  methods: { type: Object, required: true }, requestUrls: { type: Object, required: true },
+})
+const page = usePage()
+const csrf = page.props.adminLayout.csrfToken
+const portalUrl = (id) => `${props.requestUrls.portalBase}/${id}?tab=billing`
+const requestUrl = (kind, id, action) => `${props.requestUrls[kind === 'purchase' ? 'purchaseApproveBase' : 'graceApproveBase']}/${id}/${action}`
+const dateOnly = (value) => value ? String(value).slice(0, 10) : ''
+const dateLabel = (value) => value ? new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+const relative = (value) => {
+  if (!value) return ''
+  const seconds = Math.round((new Date(value).getTime() - Date.now()) / 1000)
+  const units = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]]
+  const [unit, size] = units.find(([, size]) => Math.abs(seconds) >= size) || ['second', 1]
+  return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(Math.round(seconds / size), unit)
+}
+</script>
+
+<template>
+  <form method="GET" class="card mb-3" role="search"><div class="card-body d-flex flex-column flex-sm-row gap-2">
+    <div class="flex-grow-1"><label class="visually-hidden" for="request-search">Search pending requests</label><input class="form-control" id="request-search" type="search" name="q" :value="q" placeholder="Find pending requests by portal, mobile, or email"></div>
+    <button class="btn btn-primary px-4" type="submit">Search</button><a v-if="q" class="btn btn-phoenix-secondary" :href="requestUrls.index">Clear</a>
+  </div></form>
+
+  <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Request sections"><a class="btn btn-phoenix-secondary" href="#renewal-requests">Renewals <span class="badge badge-phoenix badge-phoenix-warning ms-1">{{ pendingPurchases.total }}</span></a><a class="btn btn-phoenix-secondary" href="#grace-requests">Grace periods <span class="badge badge-phoenix badge-phoenix-warning ms-1">{{ pendingGraces.total }}</span></a><a class="btn btn-phoenix-secondary" href="#request-history">Recently handled</a></nav>
+
+  <div id="renewal-requests" class="d-flex align-items-center gap-2 mb-3"><h4 class="mb-0">Renewal requests</h4><span class="badge badge-phoenix" :class="pendingPurchases.total ? 'badge-phoenix-warning' : 'badge-phoenix-secondary'">{{ pendingPurchases.total }} pending</span></div>
+  <div v-for="r in pendingPurchases.data" :key="`purchase-${r.id}`" class="card mb-3"><div class="card-body"><div class="row g-4">
+    <div class="col-lg-6"><a class="fw-bold fs-8" :href="portalUrl(r.portal_id)">{{ r.portal.portal_name }}</a><span class="fs-9 text-body-tertiary ms-2">{{ r.portal.editor_mobile }} · sent {{ relative(r.created_at) }}</span>
+      <dl class="row mt-3 mb-0 fs-9"><dt class="col-4">Plan</dt><dd class="col-8">{{ r.package.name }} · {{ r.months }} month(s)</dd><dt class="col-4">Amount asked</dt><dd class="col-8 fw-bold">৳{{ Number(r.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</dd><dt class="col-4">Method</dt><dd class="col-8">{{ methods[r.method] || r.method }}</dd><dt class="col-4">Trx ID</dt><dd class="col-8">{{ r.trx_id || '—' }}</dd><template v-if="r.note"><dt class="col-4">Note</dt><dd class="col-8">{{ r.note }}</dd></template></dl>
+    </div>
+    <div class="col-lg-6"><form method="POST" :action="requestUrl('purchase', r.id, 'approve')"><input type="hidden" name="_token" :value="csrf"><div class="row g-2"><div class="col-sm-5"><label class="form-label">Amount received (৳)</label><input class="form-control" type="number" step="0.01" min="0" name="amount" :value="r.amount" required></div><div class="col-sm-7"><label class="form-label">Note to portal <span class="text-body-tertiary">(optional)</span></label><input class="form-control" name="admin_note" maxlength="255"></div></div><div class="d-flex gap-2 mt-3"><button class="btn btn-success" type="submit">Approve &amp; record payment</button><button class="btn btn-phoenix-danger" type="submit" :formaction="requestUrl('purchase', r.id, 'reject')" data-confirm="Reject this renewal request?">Reject</button></div><div class="form-text mt-2">Approving records the payment and extends the subscription, exactly like "Record payment" in the Billing tab.</div></form></div>
+  </div></div></div>
+  <div v-if="pendingPurchases.data.length === 0" class="card mb-3"><div class="card-body text-body-tertiary">{{ q ? 'No pending renewal requests match your search.' : 'No pending renewal requests.' }}</div></div>
+  <nav v-if="pendingPurchases.last_page > 1" class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"><span class="small text-body-tertiary">Showing {{ pendingPurchases.from }}–{{ pendingPurchases.to }} of {{ pendingPurchases.total }} renewal requests</span><ul class="pagination mb-0"><li v-for="(link, i) in pendingPurchases.links" :key="i" class="page-item" :class="{ active: link.active, disabled: !link.url }"><Link class="page-link" :href="link.url || '#'" preserve-scroll><span v-html="link.label"></span></Link></li></ul></nav>
+
+  <div id="grace-requests" class="d-flex align-items-center gap-2 mb-3 mt-5"><h4 class="mb-0">Grace period requests</h4><span class="badge badge-phoenix" :class="pendingGraces.total ? 'badge-phoenix-warning' : 'badge-phoenix-secondary'">{{ pendingGraces.total }} pending</span></div>
+  <div v-for="r in pendingGraces.data" :key="`grace-${r.id}`" class="card mb-3"><div class="card-body"><div class="row g-4">
+    <div class="col-lg-6"><a class="fw-bold fs-8" :href="portalUrl(r.portal_id)">{{ r.portal.portal_name }}</a><span class="fs-9 text-body-tertiary ms-2">{{ r.portal.editor_mobile }} · sent {{ relative(r.created_at) }}</span><dl class="row mt-3 mb-0 fs-9"><dt class="col-4">Paid till</dt><dd class="col-8">{{ r.current_subscription?.ends_at || '—' }}</dd><dt class="col-4">Current grace</dt><dd class="col-8">{{ r.current_subscription ? `${r.current_subscription.grace_days} day(s) · till ${r.current_subscription.grace_until}` : '—' }}</dd><dt class="col-4">Wants until</dt><dd class="col-8 fw-bold">{{ dateLabel(r.until_date) }}</dd><template v-if="r.reason"><dt class="col-4">Reason</dt><dd class="col-8">{{ r.reason }}</dd></template></dl></div>
+    <div class="col-lg-6"><form method="POST" :action="requestUrl('grace', r.id, 'approve')"><input type="hidden" name="_token" :value="csrf"><div class="row g-2"><div class="col-sm-5"><label class="form-label">Grace ends on</label><input class="form-control" type="date" name="until_date" :value="dateOnly(r.until_date)" required></div><div class="col-sm-7"><label class="form-label">Note to portal <span class="text-body-tertiary">(optional)</span></label><input class="form-control" name="admin_note" maxlength="255"></div></div><div class="d-flex gap-2 mt-3"><button class="btn btn-success" type="submit">Approve</button><button class="btn btn-phoenix-danger" type="submit" :formaction="requestUrl('grace', r.id, 'reject')" data-confirm="Reject this grace period request?">Reject</button></div><div class="form-text mt-2">You can change the date before approving. The portal can keep working until that day.</div></form></div>
+  </div></div></div>
+  <div v-if="pendingGraces.data.length === 0" class="card mb-3"><div class="card-body text-body-tertiary">{{ q ? 'No pending grace period requests match your search.' : 'No pending grace period requests.' }}</div></div>
+  <nav v-if="pendingGraces.last_page > 1" class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"><span class="small text-body-tertiary">Showing {{ pendingGraces.from }}–{{ pendingGraces.to }} of {{ pendingGraces.total }} grace period requests</span><ul class="pagination mb-0"><li v-for="(link, i) in pendingGraces.links" :key="i" class="page-item" :class="{ active: link.active, disabled: !link.url }"><Link class="page-link" :href="link.url || '#'" preserve-scroll><span v-html="link.label"></span></Link></li></ul></nav>
+
+  <h4 id="request-history" class="mb-3 mt-5">Recently handled</h4><div class="row g-4">
+    <div class="col-xl-6"><div class="card"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2"><h5 class="mb-0">Renewals</h5><form method="GET" :action="requestUrls.index" class="d-flex align-items-center gap-2"><input v-if="q" type="hidden" name="q" :value="q"><input type="hidden" name="grace_status" :value="graceStatus"><label class="visually-hidden" for="renewal-history-status">Filter renewals by status</label><select class="form-select form-select-sm" id="renewal-history-status" name="renewal_status" :value="renewalStatus" @change="$event.target.form.requestSubmit()"><option value="">All statuses</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></form></div><div class="table-responsive"><table class="table table-hover mb-0 align-middle"><thead><tr><th>Portal</th><th>Plan</th><th>Amount</th><th>Status</th><th>When</th></tr></thead><tbody><tr v-for="r in historyPurchases" :key="r.id"><td><a :href="portalUrl(r.portal_id)">{{ r.portal.portal_name }}</a></td><td>{{ r.package.name }} · {{ r.months }}m</td><td>৳{{ Number(r.amount).toLocaleString('en-US') }}</td><td><span class="badge badge-phoenix" :class="`badge-phoenix-${r.status === 'approved' ? 'success' : 'danger'}`">{{ r.status }}</span></td><td class="fs-9">{{ relative(r.decided_at) }}</td></tr><tr v-if="historyPurchases.length === 0"><td colspan="5" class="text-center text-body-tertiary py-4">Nothing yet.</td></tr></tbody></table></div></div></div>
+    <div class="col-xl-6"><div class="card"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2"><h5 class="mb-0">Grace periods</h5><form method="GET" :action="requestUrls.index" class="d-flex align-items-center gap-2"><input v-if="q" type="hidden" name="q" :value="q"><input type="hidden" name="renewal_status" :value="renewalStatus"><label class="visually-hidden" for="grace-history-status">Filter grace periods by status</label><select class="form-select form-select-sm" id="grace-history-status" name="grace_status" :value="graceStatus" @change="$event.target.form.requestSubmit()"><option value="">All statuses</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></form></div><div class="table-responsive"><table class="table table-hover mb-0 align-middle"><thead><tr><th>Portal</th><th>Asked until</th><th>Granted until</th><th>Status</th><th>When</th></tr></thead><tbody><tr v-for="r in historyGraces" :key="r.id"><td><a :href="portalUrl(r.portal_id)">{{ r.portal.portal_name }}</a></td><td>{{ dateLabel(r.until_date) }}</td><td>{{ dateLabel(r.approved_until) }}</td><td><span class="badge badge-phoenix" :class="`badge-phoenix-${r.status === 'approved' ? 'success' : 'danger'}`">{{ r.status }}</span></td><td class="fs-9">{{ relative(r.decided_at) }}</td></tr><tr v-if="historyGraces.length === 0"><td colspan="5" class="text-center text-body-tertiary py-4">Nothing yet.</td></tr></tbody></table></div></div></div>
+  </div>
+</template>

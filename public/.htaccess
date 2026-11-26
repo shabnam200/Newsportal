@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Let Laravel resize any public image on demand when a size is requested.
+    # Without ?size=..., existing image files are still served directly by Apache.
+    RewriteCond %{QUERY_STRING} (^|&)size=[0-9]+(&|$) [NC]
+    RewriteRule ^(.+\.(?:jpe?g|png|gif|webp|bmp))$ index.php [L,NC]
+
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>

@@ -1,0 +1,25 @@
+{
+  "name": "phoenix-project-management-vue",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config vite.config.js",
+    "build": "vite build --config vite.config.js && node scripts/copy-static-assets.mjs",
+    "preview": "vite preview --config vite.config.js"
+  },
+  "dependencies": {
+    "@inertiajs/vue3": "^3.11.0",
+    "jquery": "^3.7.1",
+    "summernote": "^0.9.1",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.0",
+    "laravel-vite-plugin": "^2.0.0",
+    "vite": "^7.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

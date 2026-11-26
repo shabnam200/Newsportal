@@ -1,0 +1,22 @@
+/*
+ * Shared responsive polish for every Inertia page (admin + portal).
+ * Imported from resources/js/app.js, so it survives `npm run build`
+ * (public/assets is overwritten from v1.23.0/assets, this file is not).
+ */
+
+/* Phoenix tables inside a card: keep the first / last cell off the card edge. */
+.card > .table-responsive > .table > :is(thead, tbody, tfoot) > tr > :first-child { padding-left: 1rem; }
+.card > .table-responsive > .table > :is(thead, tbody, tfoot) > tr > :last-child { padding-right: 1rem; }
+
+/* Long pagination lists wrap instead of pushing the page sideways. */
+.pagination { flex-wrap: wrap; row-gap: .25rem; }
+
+/* Smooth touch scrolling for wide tables. */
+.table-responsive { -webkit-overflow-scrolling: touch; }
+
+/* Phones: slightly tighter cards / alerts so forms get more room. */
+@media (max-width: 575.98px) {
+  .card-body { padding: 1rem; }
+  .card-header { padding: .75rem 1rem; }
+  .alert { padding: .75rem 1rem; }
+}
