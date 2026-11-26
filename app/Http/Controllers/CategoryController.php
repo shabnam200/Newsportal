@@ -31,7 +31,11 @@ class CategoryController extends Controller
     /** The page: the normal dashboard shell with the category module in the content area. */
     public function index(Request $request, SubscriptionService $subs, PortalBillingController $billing)
     {
-        return Inertia::render('Portal/ModuleHost', ['module' => 'categories'])
+        return Inertia::render('Portal/Categories', [
+            'dataUrl' => route('categories.data'),
+            'storeUrl' => route('categories.store'),
+            'updateUrl' => url('/categories'),
+        ])
             ->rootView('dashboard')
             ->withViewData([...$billing->dashboardViewData($request, $subs), 'module' => 'categories']);
     }

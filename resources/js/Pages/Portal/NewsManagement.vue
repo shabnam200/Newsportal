@@ -1,6 +1,6 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import Icon from '../../Components/Icon.vue'
 
 const props = defineProps({
@@ -12,6 +12,8 @@ const props = defineProps({
 })
 
 const page = usePage()
+const searchQuery = ref(props.filters.q || '')
+const searchStatus = ref(props.filters.status ?? '')
 
 // The Phoenix shell (sidebar / navbar) is drawn by the dashboard view; move this page into its .content area.
 onMounted(() => {
@@ -36,6 +38,14 @@ function statusTone(status) {
   return Number(status) === 1 ? 'success' : 'secondary'
 }
 
+function search() {
+  router.get(props.managementUrl, { q: searchQuery.value, status: searchStatus.value }, {
+    preserveState: true,
+    preserveScroll: true,
+    replace: true,
+  })
+}
+
 // On phones only show the first / last / current page numbers (plus Previous / Next).
 function showPageLink(link, index, links) {
   return link.active || index === 0 || index === links.length - 1
@@ -51,27 +61,27 @@ const hasFilters = () => Boolean(props.filters.q) || (props.filters.status !== '
         <h2 class="mb-2 text-body-emphasis">News Management</h2>
         <h5 class="text-body-tertiary fw-semibold mb-0">Browse, edit, or remove news stories from this portal</h5>
       </div>
-      <a class="btn btn-primary" :href="createUrl"><Icon name="plus" class="me-2" />Create news</a>
+      <Link class="btn btn-primary" :href="createUrl"><Icon name="plus" class="me-2" />Create news</Link>
     </div>
 
     <div v-if="page.props.flash?.success" class="alert alert-subtle-success" role="status">{{ page.props.flash.success }}</div>
     <div v-if="Object.keys(page.props.errors || {}).length" class="alert alert-subtle-danger" role="alert"><div v-for="(message, field) in page.props.errors" :key="field">{{ message }}</div></div>
 
-    <form class="row g-2 g-md-3 align-items-center mb-4" method="GET" :action="managementUrl" role="search">
+    <form class="row g-2 g-md-3 align-items-center mb-4" role="search" @submit.prevent="search">
       <div class="col-12 col-md">
         <label class="visually-hidden" for="news-search">Search news</label>
-        <input id="news-search" class="form-control" name="q" type="search" :value="filters.q" placeholder="Search headline, brief, or reporter">
+        <input id="news-search" v-model="searchQuery" class="form-control" name="q" type="search" placeholder="Search headline, brief, or reporter">
       </div>
       <div class="col-12 col-sm-6 col-md-auto">
         <label class="visually-hidden" for="news-status">Filter by status</label>
-        <select id="news-status" class="form-select news-status-filter" name="status" :value="filters.status" @change="$event.target.form.requestSubmit()">
+        <select id="news-status" v-model="searchStatus" class="form-select news-status-filter" name="status" @change="search">
           <option value="">All statuses</option>
           <option v-for="(label, value) in statusOptions" :key="value" :value="value">{{ label }}</option>
         </select>
       </div>
       <div class="col-12 col-sm-6 col-md-auto d-flex gap-2">
         <button class="btn btn-primary px-4 flex-grow-1 flex-md-grow-0" type="submit"><Icon name="search" class="me-2" />Search</button>
-        <a v-if="hasFilters()" class="btn btn-phoenix-secondary" :href="managementUrl">Clear</a>
+        <Link v-if="hasFilters()" class="btn btn-phoenix-secondary" :href="managementUrl">Clear</Link>
       </div>
     </form>
 

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 
 const page = usePage()
 const admin = computed(() => page.props.adminLayout?.admin ?? {})
@@ -99,11 +99,11 @@ onMounted(() => {
             <li class="nav-item">
               <p class="navbar-vertical-label">Admin</p>
               <hr class="navbar-vertical-line">
-              <div class="nav-item-wrapper"><a class="nav-link label-1" :class="{ active: isActive('dashboard') }" :href="urls.dashboard" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="pie-chart"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Dashboard</span></span></div></a></div>
-              <div class="nav-item-wrapper"><a class="nav-link label-1" :class="{ active: isActive('portals') }" :href="urls.portals" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="globe"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Portals</span></span></div></a></div>
-              <div class="nav-item-wrapper"><a class="nav-link label-1" :class="{ active: isActive('requests') }" :href="urls.requests" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="inbox"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Requests</span><span v-if="pendingRequestCount > 0" class="badge ms-2 badge badge-phoenix badge-phoenix-warning">{{ pendingRequestCount }}</span></span></div></a></div>
-              <div class="nav-item-wrapper"><a class="nav-link label-1" :class="{ active: isActive('activity') }" :href="urls.activity" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="activity"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Activity monitor</span></span></div></a></div>
-              <div class="nav-item-wrapper"><a class="nav-link label-1" :class="{ active: isActive('packages') }" :href="urls.packages" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="package"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Packages</span></span></div></a></div>
+              <div class="nav-item-wrapper"><Link class="nav-link label-1" :class="{ active: isActive('dashboard') }" :href="urls.dashboard" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="pie-chart"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Dashboard</span></span></div></Link></div>
+              <div class="nav-item-wrapper"><Link class="nav-link label-1" :class="{ active: isActive('portals') }" :href="urls.portals" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="globe"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Portals</span></span></div></Link></div>
+              <div class="nav-item-wrapper"><Link class="nav-link label-1" :class="{ active: isActive('requests') }" :href="urls.requests" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="inbox"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Requests</span><span v-if="pendingRequestCount > 0" class="badge ms-2 badge badge-phoenix badge-phoenix-warning">{{ pendingRequestCount }}</span></span></div></Link></div>
+              <div class="nav-item-wrapper"><Link class="nav-link label-1" :class="{ active: isActive('activity') }" :href="urls.activity" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="activity"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Activity monitor</span></span></div></Link></div>
+              <div class="nav-item-wrapper"><Link class="nav-link label-1" :class="{ active: isActive('packages') }" :href="urls.packages" role="button" aria-expanded="false"><div class="d-flex align-items-center"><span class="nav-link-icon"><span data-feather="package"></span></span><span class="nav-link-text-wrapper"><span class="nav-link-text">Packages</span></span></div></Link></div>
             </li>
           </ul>
         </div>
@@ -115,7 +115,7 @@ onMounted(() => {
       <div class="collapse navbar-collapse justify-content-between">
         <div class="navbar-logo">
           <button class="btn navbar-toggler navbar-toggler-humburger-icon hover-bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#navbarVerticalCollapse" aria-controls="navbarVerticalCollapse" aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span class="toggle-line"></span></span></button>
-          <a class="navbar-brand me-1 me-sm-3" :href="urls.dashboard"><div class="d-flex align-items-center"><div class="d-flex align-items-center"><img :src="urls.logo" alt="phoenix" width="27"><h5 class="logo-text ms-2 d-none d-sm-block">phoenix</h5></div></div></a>
+          <Link class="navbar-brand me-1 me-sm-3" :href="urls.dashboard"><div class="d-flex align-items-center"><div class="d-flex align-items-center"><img :src="urls.logo" alt="phoenix" width="27"><h5 class="logo-text ms-2 d-none d-sm-block">phoenix</h5></div></div></Link>
         </div>
         <ul class="navbar-nav navbar-nav-icons flex-row">
           <li class="nav-item"><div class="theme-control-toggle px-2"><input class="form-check-input ms-0 theme-control-toggle-input" type="checkbox" data-theme-control="phoenixTheme" value="dark" id="themeControlToggle"><label class="mb-0 theme-control-toggle-label theme-control-toggle-light" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" data-bs-title="Switch theme" style="height:32px;width:32px;"><span class="icon" data-feather="moon"></span></label><label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" data-bs-title="Switch theme" style="height:32px;width:32px;"><span class="icon" data-feather="sun"></span></label></div></li>

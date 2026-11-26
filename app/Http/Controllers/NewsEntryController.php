@@ -20,9 +20,17 @@ class NewsEntryController extends Controller
         $types = DB::connection('tenant')->table('news_type_info')->where('type_status', 1)
             ->orderBy('news_type_id')->get(['news_type_id', 'type_name']);
 
-        return Inertia::render('Portal/ModuleHost', [
-            'module' => 'news-entry',
+        return Inertia::render('Portal/NewsEntry', [
             'newsTypes' => $types,
+            'statusOptions' => config('news.status'),
+            'defaultStatus' => config('news.default_status'),
+            'categoriesUrl' => route('categories.data'),
+            'reportersUrl' => route('news.reporters'),
+            'storeUrl' => route('news.store'),
+            'choicesUrl' => asset('vendors/choices/choices.min.js'),
+            'jqueryUrl' => asset('vendors/jquery/jquery.min.js'),
+            'summernoteUrl' => asset('vendors/summernote/summernote-lite.min.js'),
+            'summernoteCssUrl' => asset('vendors/summernote/summernote-lite.min.css'),
         ])->rootView('dashboard')->withViewData([
             ...$billing->dashboardViewData($request, $subs),
             'module' => 'news-entry',

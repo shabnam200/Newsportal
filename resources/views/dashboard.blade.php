@@ -607,13 +607,6 @@
 })();
 </script>
 @endif
-@if (($module ?? null) === 'categories')
-    @include('modules.categories')
-@endif
-@if (($module ?? null) === 'news-entry')
-    @include('modules.news-entry')
-@endif
-
 {{-- Keep the portal sidebar focused on the three requested destinations. --}}
 <script>
 (function () {

@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted } from 'vue'
-import { Head, useForm, usePage } from '@inertiajs/vue3'
+import { computed, onMounted, ref } from 'vue'
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import Icon from '../../Components/Icon.vue'
 
 const props = defineProps({
@@ -12,8 +12,11 @@ const props = defineProps({
 const page = usePage()
 const form = useForm({
   ...props.article,
+  tags: '',
   sections: props.sections.map((section) => ({ ...section })),
 })
+const tagItems = ref((props.article.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean))
+const tagDraft = ref('')
 
 const topCategories = computed(() => props.categories.filter((category) => Number(category.level) === 1))
 const subCategories = computed(() => props.categories.filter((category) => Number(category.level) === 2 && Number(category.parent_id) === Number(form.cat_id)))
@@ -49,7 +52,28 @@ function formatText(command) {
   document.execCommand(command, false)
 }
 
+function addTag() {
+  const tag = tagDraft.value.trim()
+  if (!tag) return
+  if (tag.length <= 250 && tagItems.value.length < 20 && !tagItems.value.some((existing) => existing.toLocaleLowerCase() === tag.toLocaleLowerCase())) {
+    tagItems.value.push(tag)
+  }
+  tagDraft.value = ''
+}
+
+function handleTagKeydown(event) {
+  if (event.key === 'Enter' || event.key === ',') {
+    event.preventDefault()
+    addTag()
+  }
+}
+
+function removeTag(index) {
+  tagItems.value.splice(index, 1)
+}
+
 function submit() {
+  form.tags = tagItems.value.join(', ')
   form.put(props.updateUrl, { preserveScroll: true })
 }
 </script>
@@ -59,7 +83,7 @@ function submit() {
   <div class="news-edit-page">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
       <div><h2 class="mb-2 text-body-emphasis">Edit news</h2><h5 class="text-body-tertiary fw-semibold mb-0">Story #{{ newsId }} · media files are preserved while you edit the text and story details.</h5></div>
-      <a class="btn btn-phoenix-secondary" :href="managementUrl"><Icon name="arrow-left" class="me-2" />Back to news</a>
+      <Link class="btn btn-phoenix-secondary" :href="managementUrl"><Icon name="arrow-left" class="me-2" />Back to news</Link>
     </div>
 
     <div v-if="page.props.flash?.success" class="alert alert-subtle-success">{{ page.props.flash.success }}</div>
@@ -92,12 +116,12 @@ function submit() {
         <div v-if="form.errors[`sections.${index}.text`]" class="invalid-feedback d-block">{{ form.errors[`sections.${index}.text`] }}</div>
       </div><div v-if="form.errors.sections" class="invalid-feedback d-block">{{ form.errors.sections }}</div></div></div>
 
-      <div class="card mb-3"><div class="card-header"><h4 class="card-title mb-0">Tags</h4></div><div class="card-body"><label class="form-label">Tags</label><input v-model="form.tags" class="form-control" name="tags" placeholder="Separate tags with commas"><div class="form-text">Up to 20 tags, 250 characters each.</div></div></div>
+      <div class="card mb-3"><div class="card-header"><h4 class="card-title mb-0">Tags</h4></div><div class="card-body"><label class="form-label">Tags</label><div class="news-tag-input form-control d-flex flex-wrap align-items-center gap-1" @click="$refs.tagInput.focus()"><span v-for="(tag, index) in tagItems" :key="`${tag}-${index}`" class="news-tag-chip">{{ tag }}<button type="button" :aria-label="`Remove ${tag}`" @click.stop="removeTag(index)">×</button></span><input ref="tagInput" v-model="tagDraft" class="news-tag-draft" maxlength="250" placeholder="Type a tag and press Enter" :disabled="tagItems.length >= 20" @keydown="handleTagKeydown"></div><div class="form-text">Press Enter or comma to add a tag. Up to 20 tags, 250 characters each.</div></div></div>
       <div class="card mb-3"><div class="card-header"><h4 class="card-title mb-0">Reporter</h4></div><div class="card-body"><label class="form-label">Reporter names</label><input v-model="form.reporter_names" class="form-control" name="reporter_names" maxlength="1000" placeholder="Separate names with commas"><div class="form-text">The names are kept on this portal's news record.</div><div v-if="form.errors.reporter_names" class="invalid-feedback d-block">{{ form.errors.reporter_names }}</div></div></div>
       <div class="card mb-3"><div class="card-header"><h4 class="card-title mb-0">News source</h4></div><div class="card-body row g-3"><div class="col-md-6"><label class="form-label">Source</label><input v-model="form.news_source" class="form-control" name="news_source" maxlength="150"></div><div class="col-md-6"><label class="form-label">Source link</label><input v-model="form.news_source_link" class="form-control" name="news_source_link" type="url" maxlength="500"><div v-if="form.errors.news_source_link" class="invalid-feedback d-block">{{ form.errors.news_source_link }}</div></div></div></div>
       <div class="card mb-4"><div class="card-header"><h4 class="card-title mb-0">SEO</h4></div><div class="card-body row g-3"><div class="col-12"><label class="form-label">SEO title</label><input v-model="form.seo_title" class="form-control" name="seo_title" maxlength="250"></div><div class="col-12"><label class="form-label">SEO keywords</label><input v-model="form.seo_keyword" class="form-control" name="seo_keyword" maxlength="350"></div><div class="col-12"><label class="form-label">SEO description</label><textarea v-model="form.seo_description" class="form-control" name="seo_description" maxlength="400" rows="3"></textarea></div></div></div>
 
-      <div class="d-grid d-sm-flex justify-content-sm-end gap-2 mb-4"><a class="btn btn-phoenix-secondary" :href="managementUrl">Cancel</a><button class="btn btn-primary" type="submit" :disabled="form.processing"><span v-if="form.processing" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Save changes</button></div>
+      <div class="d-grid d-sm-flex justify-content-sm-end gap-2 mb-4"><Link class="btn btn-phoenix-secondary" :href="managementUrl">Cancel</Link><button class="btn btn-primary" type="submit" :disabled="form.processing"><span v-if="form.processing" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Save changes</button></div>
     </form>
   </div>
 </template>
@@ -111,4 +135,8 @@ function submit() {
 .news-edit-media-preview { max-width: min(100%, 24rem); max-height: 16rem; object-fit: contain; border-radius: .4rem; background: var(--phoenix-secondary-bg); }
 .news-rich-editor { min-height: 9rem; overflow-y: auto; }
 .news-rich-editor:focus { border-color: var(--phoenix-primary); box-shadow: 0 0 0 .15rem rgba(var(--phoenix-primary-rgb), .15); outline: 0; }
+.news-tag-input { min-height: 2.75rem; height: auto; cursor: text; }
+.news-tag-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .4rem .15rem .6rem; border-radius: .3rem; background: var(--phoenix-primary-bg-subtle); color: var(--phoenix-emphasis-color); font-size: .8rem; }
+.news-tag-chip button { border: 0; padding: 0; background: transparent; color: var(--phoenix-secondary-color); line-height: 1; cursor: pointer; }
+.news-tag-draft { flex: 1 1 10rem; min-width: 8rem; border: 0; outline: 0; padding: .2rem; background: transparent; color: var(--phoenix-body-color); }
 </style>

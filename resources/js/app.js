@@ -6,7 +6,8 @@ import '../css/portal-responsive.css'
 const pages = {
   ...import.meta.glob('./Pages/Portal/Login.vue'),
   ...import.meta.glob('./Pages/Portal/Signup.vue'),
-  ...import.meta.glob('./Pages/Portal/ModuleHost.vue'),
+  ...import.meta.glob('./Pages/Portal/Categories.vue'),
+  ...import.meta.glob('./Pages/Portal/NewsEntry.vue'),
   ...import.meta.glob('./Pages/Portal/DashboardHost.vue'),
   ...import.meta.glob('./Pages/Portal/NewsManagement.vue'),
   ...import.meta.glob('./Pages/Portal/NewsEdit.vue'),
